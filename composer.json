@@ -1,0 +1,13 @@
+{
+    "name": "mirthe/mytumblr",
+    "description": "Show recent posts for a Tumblr account",
+    "keywords": ["kirby-plugin", "tumblr", "post", "blog"],
+    "type": "kirby-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mirthe Valentijn",
+            "email": "me@Mirthe.org"
+        }
+    ]
+}
