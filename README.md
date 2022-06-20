@@ -26,8 +26,6 @@ Include this snippet to display your tumblr posts on a page
 
 ## Example 
 
-https://mirthe.org/gevonden
-
 <img src="example.png" alt="Example">
 
 ## Todo
