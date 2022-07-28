@@ -1,6 +1,7 @@
 {
     "name": "mirthe/mytumblr",
     "description": "Show recent posts for a Tumblr account",
+    "homepage": "https://github.com/mirthe/mytumblr",
     "keywords": ["kirby-plugin", "tumblr", "post", "blog"],
     "type": "kirby-plugin",
     "license": "MIT",
