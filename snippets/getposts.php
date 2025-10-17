@@ -10,7 +10,7 @@ if (!file_exists($localfile) || time()-filemtime($localfile) > 2 * 3600 || isset
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $tumblr_url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, $site->title());
+    curl_setopt($ch, CURLOPT_USERAGENT, kirby()->site()->title());
 
     $feed = curl_exec($ch);
     curl_close($ch);
