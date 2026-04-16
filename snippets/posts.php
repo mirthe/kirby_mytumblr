@@ -9,6 +9,7 @@ foreach ($mypostsdata as $post) {
     
     echo '<div class="block block--tumblr tumblr-'.$post->type.'">'. "\n";
         
+    // ---------------- LINK ----------------
     if ($post->type == 'link') {
         if (property_exists($post, 'photos')) {
             echo "<a href='{$post->url}'>
@@ -25,6 +26,8 @@ foreach ($mypostsdata as $post) {
                 <p>{$post->description}</p>
                 <p><a href='{$post->url}'>Artikel lezen</a></p>
             </div>";
+
+    // ---------------- PHOTO ----------------
     } elseif ($post->type == 'photo') {
         $photo = ($post->photos[0]->alt_sizes[2]->url);
         echo "<img class='block--img' src='{$photo}' alt='' loading='lazy'>
@@ -32,6 +35,8 @@ foreach ($mypostsdata as $post) {
                 <div class='caption'>{$post->caption}</div>
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
             </div>";
+
+    // ---------------- VIDEO ----------------
     } elseif ($post->type == 'video') {
         $caption = strip_tags($post->caption);
         if (property_exists($post, 'permalink_url')) {
@@ -47,6 +52,8 @@ foreach ($mypostsdata as $post) {
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
                 <p><a href='{$post->permalink_url}'>Video bekijken</a></p>
             </div>";
+
+    // ---------------- TEXT ----------------
     } elseif ($post->type == 'text') {
 
         if ($post->reblog_key !== '') {
@@ -57,7 +64,7 @@ foreach ($mypostsdata as $post) {
                 // Tumblr Neue Post Format (NPF)
                 // need to rework this, might use getpost.php
                 
-                //print_r($post);
+                // print_r($post);
 
                 preg_match_all("#(?<=v=|v\/|vi=|vi\/|youtu.be\/)[a-zA-Z0-9_-]{11}#", $post->reblog->comment, $youtubeid);
                 
@@ -65,14 +72,16 @@ foreach ($mypostsdata as $post) {
                     echo "<a href='{$post->post_url}'>
                         <img class='block--img' src='https://img.youtube.com/vi/". $youtubeid[0][0] ."/hqdefault.jpg' alt='' loading='lazy'>
                     </a>";
+                    $post->linktekst = "Video bekijken";
                 } else {
                     echo "<div class='block--fallback'></div>";
                     $post->permalink_url = $post->post_url;
+                    $post->linktekst = "Link openen";
                 }
                 echo "<div class='block--body'>
                         <h2>{$post->summary}</h2>
                         <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                        <p><a href='{$post->post_url}'>Video bekijken</a></p>
+                        <p><a href='{$post->post_url}'>{$post->linktekst}</a></p>
                     </div>";}
             else {
                 echo "<div class='block--body'>
@@ -92,6 +101,8 @@ foreach ($mypostsdata as $post) {
                 <a href='{$post->post_url}'><i class='fa-regular fa-external-link' aria-hidden='true'></i></a>
             </div>";
         }
+
+    // ----------------QUOTE ----------------
     } elseif ($post->type == 'quote') {
         echo "<div class='block--body'>
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
@@ -100,6 +111,8 @@ foreach ($mypostsdata as $post) {
                     <div class='blockquote-footer text-left'>{$post->source}</cite></div>
                 </blockquote>
             </div>";
+
+    // ---------------- EVERYTHING ELSE ----------------
     } else {
         echo "<div class='block--body'>
                 <h2>Post type {$post->type} onbekend</h2>
