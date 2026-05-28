@@ -1,28 +1,30 @@
-<?php $localfile =  __DIR__ . "/tumblr.json";
-$tumblr_url = "https://api.tumblr.com/v2/blog/".
+<?php
+$tumblr_url = "https://api.tumblr.com/v2/blog/" .
     option('mirthe.mytumblr.domain') .
-    "/posts?api_key=". option('mirthe.mytumblr.apiKey') .
-    "&limit=". option('mirthe.mytumblr.limit') .
+    "/posts?api_key=" . option('mirthe.mytumblr.apiKey') .
+    "&limit=" . option('mirthe.mytumblr.limit') .
     "&attach_reblog_tree=false";
 
-if (!file_exists($localfile) || time()-filemtime($localfile) > 2 * 3600 || isset($_GET['forcecache'])) {
+$cache = kirby()->cache('mirthe.mytumblr');
+$cacheKey = 'tumblr-posts-' . strtolower(option('mirthe.mytumblr.domain'));
+$feed = $cache->get($cacheKey);
+$force = isset($_GET['forcecache']);
 
+if ($feed === null || $force) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $tumblr_url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERAGENT, kirby()->site()->title());
 
     $feed = curl_exec($ch);
+    $error = curl_errno($ch);
     curl_close($ch);
 
-    $fp = fopen($localfile, 'w');
-    fwrite($fp, $feed);
-    fclose($fp);
-
-    // TODO cache forceren
-
-} else {
-    $feed = file_get_contents($localfile);
+    if ($feed !== false && $error === 0) {
+        $cache->set($cacheKey, $feed, 2 * 3600);
+    } else {
+        $feed = $cache->get($cacheKey);
+    }
 }
 
 $apidata = json_decode($feed);
