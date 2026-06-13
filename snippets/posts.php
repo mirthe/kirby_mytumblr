@@ -24,7 +24,7 @@ foreach ($mypostsdata as $post) {
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
                 <p>{$post->excerpt}</p>
                 <p>{$post->description}</p>
-                <p><a href='{$post->url}'>Artikel lezen</a></p>
+                <p><a href='{$post->url}'>" . t('mirthe.mytumblr.read-article') . "</a></p>
             </div>";
 
     // ---------------- PHOTO ----------------
@@ -50,7 +50,7 @@ foreach ($mypostsdata as $post) {
         echo "<div class='block--body'>
                 <h2>{$caption}</h2>
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <p><a href='{$post->permalink_url}'>Video bekijken</a></p>
+                <p><a href='{$post->permalink_url}'>" . t('mirthe.mytumblr.watch-video') . "</a></p>
             </div>";
 
     // ---------------- TEXT ----------------
@@ -72,11 +72,11 @@ foreach ($mypostsdata as $post) {
                     echo "<a href='{$post->post_url}'>
                         <img class='block--img' src='https://img.youtube.com/vi/". $youtubeid[0][0] ."/hqdefault.jpg' alt='' loading='lazy'>
                     </a>";
-                    $post->linktekst = "Video bekijken";
+                    $post->linktekst = t('mirthe.mytumblr.watch-video');
                 } else {
                     echo "<div class='block--fallback'></div>";
                     $post->permalink_url = $post->post_url;
-                    $post->linktekst = "Link openen";
+                    $post->linktekst = t('mirthe.mytumblr.open-link');
                 }
                 echo "<div class='block--body'>
                         <h2>{$post->summary}</h2>
@@ -85,11 +85,11 @@ foreach ($mypostsdata as $post) {
                     </div>";}
             else {
                 echo "<div class='block--body'>
-                    <h2>Reblog</h2>
+                    <h2>" . t('mirthe.mytumblr.reblog') . "</h2>
                     <time><a href='{$post->post_url}'>{$prettydate}</a></time>
                     {$post->trail[0]->content}
                     <div class='caption'>{$post->reblog->comment}</div>
-                    <a href='{$post->post_url}'>Bericht openen</a>
+                    <a href='{$post->post_url}'>" . t('mirthe.mytumblr.open-post') . "</a>
                 </div>";
             }
 
@@ -115,9 +115,9 @@ foreach ($mypostsdata as $post) {
     // ---------------- EVERYTHING ELSE ----------------
     } else {
         echo "<div class='block--body'>
-                <h2>Post type {$post->type} onbekend</h2>
+                <h2>" . str_replace('{{type}}', htmlspecialchars($post->type, ENT_QUOTES), t('mirthe.mytumblr.post-type-unknown')) . "</h2>
                 <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <p><a href='{$post->post_url}'>Bericht openen</a></p>
+                <p><a href='{$post->post_url}'>" . t('mirthe.mytumblr.open-post') . "</a></p>
             </div>";
     }
 
