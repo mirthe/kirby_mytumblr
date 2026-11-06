@@ -1,127 +1,81 @@
 <?php include_once('getposts.php'); ?>
 
 <div class="masonry">
-    <?php $i = 0;
-foreach ($mypostsdata as $post) {
-    $prettydate = date('d M Y', $post->timestamp);
+    <?php foreach ($mypostsdata as $post) {
+        $prettydate = date('d M Y', $post->timestamp);
+        $postType = $post->type;
+        $photoUrl = null;
 
-    // include('getpost.php');
-    
-    echo '<div class="block block--tumblr tumblr-'.$post->type.'">'. "\n";
-        
-    // ---------------- LINK ----------------
-    if ($post->type == 'link') {
-        if (property_exists($post, 'photos')) {
-            echo "<a href='{$post->url}'>
-                    <img class='block--img' src='{$post->photos[0]->original_size->url}' alt='' loading='lazy'>
-                </a>";
-        } else {
-            echo "<a href='{$post->url}' class='block--fallback'></a>";
-        }
+        if ($post->type === 'photo' || $post->type === 'text') {
+            $photoUrl = $post->photos[0]->alt_sizes[2]->url
+                ?? $post->photos[0]->original_size->url
+                ?? $post->photos[0]->url
+                ?? null;
 
-        echo "<div class='block--body'>
-                <h2>{$post->summary}</h2>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <p>{$post->excerpt}</p>
-                <p>{$post->description}</p>
-                <p><a href='{$post->url}'>" . t('mirthe.mytumblr.read-article') . "</a></p>
-            </div>";
-
-    // ---------------- PHOTO ----------------
-    } elseif ($post->type == 'photo') {
-        $photo = ($post->photos[0]->alt_sizes[2]->url);
-        echo "<img class='block--img' src='{$photo}' alt='' loading='lazy'>
-            <div class='block--body'>
-                <div class='caption'>{$post->caption}</div>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-            </div>";
-
-    // ---------------- VIDEO ----------------
-    } elseif ($post->type == 'video') {
-        $caption = strip_tags($post->caption);
-        if (property_exists($post, 'permalink_url')) {
-            echo "<a href='{$post->permalink_url}'>
-                <img class='block--img' src='{$post->thumbnail_url}' alt='' loading='lazy'>
-            </a>";
-        } else {
-            echo "<div class='block--fallback'></div>";
-            $post->permalink_url = $post->post_url;
-        }
-        echo "<div class='block--body'>
-                <h2>{$caption}</h2>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <p><a href='{$post->permalink_url}'>" . t('mirthe.mytumblr.watch-video') . "</a></p>
-            </div>";
-
-    // ---------------- TEXT ----------------
-    } elseif ($post->type == 'text') {
-
-        if ($post->reblog_key !== '') {
-            if ($post->reblog->tree_html == ""){
-                
-                // super hacky implementation of new nested block format..
-                // only a problem for youtube atm
-                // Tumblr Neue Post Format (NPF)
-                // need to rework this, might use getpost.php
-                
-                // print_r($post);
-
-                preg_match_all("#(?<=v=|v\/|vi=|vi\/|youtu.be\/)[a-zA-Z0-9_-]{11}#", $post->reblog->comment, $youtubeid);
-                
-                if (!empty ($youtubeid[0])) {
-                    echo "<a href='{$post->post_url}'>
-                        <img class='block--img' src='https://img.youtube.com/vi/". $youtubeid[0][0] ."/hqdefault.jpg' alt='' loading='lazy'>
-                    </a>";
-                    $post->linktekst = t('mirthe.mytumblr.watch-video');
-                } else {
-                    echo "<div class='block--fallback'></div>";
-                    $post->permalink_url = $post->post_url;
-                    $post->linktekst = t('mirthe.mytumblr.open-link');
+            if ($photoUrl === null && isset($post->content) && is_array($post->content)) {
+                foreach ($post->content as $block) {
+                    if (($block->type ?? null) === 'image' && isset($block->media[0]->url)) {
+                        $photoUrl = $block->media[0]->url;
+                        break;
+                    }
                 }
-                echo "<div class='block--body'>
-                        <h2>{$post->summary}</h2>
-                        <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                        <p><a href='{$post->post_url}'>{$post->linktekst}</a></p>
-                    </div>";}
-            else {
-                echo "<div class='block--body'>
-                    <h2>" . t('mirthe.mytumblr.reblog') . "</h2>
-                    <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                    {$post->trail[0]->content}
-                    <div class='caption'>{$post->reblog->comment}</div>
-                    <a href='{$post->post_url}'>" . t('mirthe.mytumblr.open-post') . "</a>
-                </div>";
             }
 
-        } else {
-            echo "<div class='block--body'>
-                <h2>{$post->title}</h2>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <div class='caption'>{$body}</div>
-                <a href='{$post->post_url}'><i class='fa-regular fa-external-link' aria-hidden='true'></i></a>
-            </div>";
+            if ($photoUrl === null && $post->type === 'text') {
+                $htmlContent = [$post->body ?? '', $post->reblog->comment ?? '', $post->reblog->tree_html ?? ''];
+                foreach ($post->trail ?? [] as $trailItem) {
+                    $htmlContent[] = $trailItem->content ?? '';
+                }
+
+                foreach ($htmlContent as $html) {
+                    if (preg_match('/<img\b[^>]*\bsrc=["\']([^"\']+)["\']/i', $html, $imageMatch)) {
+                        $photoUrl = html_entity_decode($imageMatch[1], ENT_QUOTES | ENT_HTML5);
+                        break;
+                    }
+                }
+            }
+
+            if ($post->type === 'text' && $photoUrl !== null) {
+                $hasText = trim(html_entity_decode(strip_tags($post->title ?? ''), ENT_QUOTES | ENT_HTML5)) !== ''
+                    || trim(html_entity_decode(strip_tags($post->body ?? ''), ENT_QUOTES | ENT_HTML5)) !== ''
+                    || trim(html_entity_decode(strip_tags($post->reblog->comment ?? ''), ENT_QUOTES | ENT_HTML5)) !== '';
+
+                if (!$hasText && isset($post->content) && is_array($post->content)) {
+                    foreach ($post->content as $block) {
+                        if (($block->type ?? null) === 'text' && trim(strip_tags($block->text ?? '')) !== '') {
+                            $hasText = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasText) {
+                    foreach ($post->trail ?? [] as $trailItem) {
+                        if (trim(html_entity_decode(strip_tags($trailItem->content ?? ''), ENT_QUOTES | ENT_HTML5)) !== '') {
+                            $hasText = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasText) {
+                    $postType = 'photo';
+                }
+            }
         }
 
-    // ----------------QUOTE ----------------
-    } elseif ($post->type == 'quote') {
-        echo "<div class='block--body'>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <blockquote class='blockquote'>
-                    <p >\"{$post->text}\"</p>
-                    <div class='blockquote-footer text-left'>{$post->source}</cite></div>
-                </blockquote>
-            </div>";
+        echo '<div class="block block--tumblr tumblr-' . $postType . '">' . "\n";
 
-    // ---------------- EVERYTHING ELSE ----------------
-    } else {
-        echo "<div class='block--body'>
-                <h2>" . str_replace('{{type}}', htmlspecialchars($post->type, ENT_QUOTES), t('mirthe.mytumblr.post-type-unknown')) . "</h2>
-                <time><a href='{$post->post_url}'>{$prettydate}</a></time>
-                <p><a href='{$post->post_url}'>" . t('mirthe.mytumblr.open-post') . "</a></p>
-            </div>";
-    }
+        $postSnippets = [
+            'link' => 'post-link.php',
+            'photo' => 'post-photo.php',
+            'video' => 'post-video.php',
+            'text' => 'post-text.php',
+            'quote' => 'post-quote.php',
+        ];
+        $postSnippet = $postSnippets[$postType] ?? 'post-unknown.php';
+        include __DIR__ . '/' . $postSnippet;
 
-    echo "</div>";
-}
-?>
+        echo '</div>';
+    } ?>
 </div>
