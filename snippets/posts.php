@@ -64,7 +64,9 @@
             }
         }
 
-        echo '<div class="block block--tumblr tumblr-' . $postType . '">' . "\n";
+        $tags = array_map('strtolower', $post->tags ?? []);
+        $largeClass = in_array('large', $tags, true) ? ' block--tumblr-large' : '';
+        echo '<div class="block block--tumblr tumblr-' . $postType . $largeClass . '">' . "\n";
 
         $postSnippets = [
             'link' => 'post-link.php',
